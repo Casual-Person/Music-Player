@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="mp3-player">
+        <input type="file" id="file-input" accept=".mp3">
+        <div class="player-controls">
+            <button class="control-button" id="prev">Previous</button>
+            <button class="control-button" id="play">Play</button>
+            <button class="control-button" id="pause">Pause</button>
+            <button class="control-button" id="next">Next</button>
+        </div>
+        <audio class="audio-player" id="audio-player" preload="auto"></audio>
+        <canvas class="visualizer" id="visualizer"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/visualizer.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
