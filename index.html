@@ -1,24 +1,629 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MP3 Player</title>
-    <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UGFD MP3 Player</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #121212; /* Dark background for a modern look */
+      color: #fff; /* Light text for contrast */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #player {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #121212; /* Slightly lighter than body for depth */
+      padding: 20px;
+      border-radius: 10px; /* Rounded corners for a modern touch */
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); /* Subtle shadow for 3D effect */
+    }
+
+    #cover {
+      width: 300px;
+      height: 300px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    #info {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    #title, #artist {
+      font-weight: 700;
+      margin: 0;
+    }
+
+    #title {
+      font-size: 1.5em;
+    }
+
+    #artist {
+      font-size: 1em;
+      color: #aaaaaa; /* Subdued color for less emphasis */
+    }
+
+    audio {
+      width: 100%; /* Full width for better control */
+      margin-top: 20px;
+    }
+
+    #lyrics {
+      margin-top: 20px;
+      text-align: center;
+      max-height: 200px;
+      overflow-y: auto; /* Scroll for lyrics */
+    }
+
+    .line {
+      display: none;
+      color: #aaaaaa; /* Maintain the cyan color for active lyrics */
+    }
+
+    .active {
+      display: block;
+    }
+/* Fade-in animation */
+    @keyframes fadeInEffect {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    body {
+      animation: fadeInEffect ease 3s;
+      animation-fill-mode: forwards;
+    }
+    #player {
+  /* existing styles */
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.7); /* larger white glow */
+    }
+    #player {
+  /* existing styles */
+  -webkit-box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* For older WebKit browsers */
+  -moz-box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* For older Firefox browsers */
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* Standard syntax */
+    }
+    @keyframes warpOutEffect {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(0.1); opacity: 0; }
+    }
+
+    /* Apply the animation to the body when the warp-out class is added */
+    body.warp-out {
+      animation: warpOutEffect ease 1s;
+      animation-fill-mode: forwards;
+      }
+    @keyframes fadeInLyrics {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.line.active {
+  animation: fadeInLyrics 1s ease forwards;
+}
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    #cover {
+      /* ... existing styles ... */
+      animation: spin 3s linear infinite; /* Apply the spinning animation */
+    }
+    .flame-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      overflow: hidden;
+      z-index: 10; /* Ensure it's above other content */
+    }
+
+    .flame {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 100px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0.6));
+      filter: blur(1px);
+      opacity: 1.00;
+    }
+    @keyframes hingeEffect {
+      0% { transform: rotate(0); }
+      20%, 60% { transform: rotate(80deg); transform-origin: top left; }
+      40%, 80% { transform: rotate(60deg); transform-origin: top left; }
+      100% { transform: translateY(700px); opacity: 0; }
+    }
+
+    .hinge {
+      animation: hingeEffect 2s ease-in-out forwards;
+    }
+
+    #settingsButton {
+    position: fixed; /* Fixed position */
+    top: 10px; /* 10px from the top */
+    right: 10px; /* 10px from the right */
+    z-index: 5000; /* Make sure it's above other elements */
+    }
+  </style>
 </head>
 <body>
-    <div class="mp3-player">
-        <input type="file" id="file-input" accept=".mp3">
-        <div class="player-controls">
-            <button class="control-button" id="prev">Previous</button>
-            <button class="control-button" id="play">Play</button>
-            <button class="control-button" id="pause">Pause</button>
-            <button class="control-button" id="next">Next</button>
-        </div>
-        <audio class="audio-player" id="audio-player" preload="auto"></audio>
-        <canvas class="visualizer" id="visualizer"></canvas>
+  <div id="player">
+    <input type="file" id="fileInput" accept=".mp3">
+    <div id="cover"></div>
+    <div id="info">
+      <p id="title"></p>
+      <p id="artist"></p>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/visualizer.js"></script>
-    <script src="script.js"></script>
+    <audio controls id="audio"></audio>
+    <div id="lyrics"></div>
+  </div>
+  <div id="gameOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000;">
+    <!-- Game content goes here -->
+    <iframe src="ugfd-proxy-eight.vercel.app" style="width: 100%; height: 100%;"></iframe>
+  </div>
+  <div class="flame-container">
+    <div class="flame"></div>
+  </div>
+  <div id="taggingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 2000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 10px; color: #000;">
+      <h2>Tag MP3 File</h2>
+      <input type="file" id="mp3Upload" accept=".mp3">
+      <input type="file" id="coverUpload" accept="image/*">
+      <input type="text" id="titleInput" placeholder="Title">
+      <input type="text" id="artistInput" placeholder="Artist">
+      <input type="text" id="albumInput" placeholder="Album">
+      <button id="doneButton">Done</button>
+    </div>
+  </div>
+  <button id="settingsButton" class="animate__animated">Settings</button>
+
+  <!-- Settings menu overlay -->
+  <div id="settingsOverlay" style="display: none; position: fixed; top: 0; left: -100%; width: 100%; height: 100%; background: url('https://raw.githubusercontent.com/Unblocked-Games-Fun-District/UGFD-Assets/main/Mp3%20Player/Screenshot_20240428-060740%20(1).png'); z-index: 3000;">
+    <!-- Settings content goes here -->
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 10px; color: #000;">
+      <h2>Settings</h2>
+      <!-- File upload input -->
+      <input type="file" id="bgImageInput" accept="image/*" title="Upload background image">
+      <label for="bgImageInput">Upload background image of player</label><br>
+      <!-- Background color input -->
+      <input type="color" id="bgColorInput" title="Change background color">
+      <label for="bgColorInput">Change background color</label><br>
+      <!-- Lighting effect input -->
+      <input type="range" id="lightingInput" min="0" max="1" step="0.1" title="Change lighting">
+      <label for="lightingInput">Change lighting</label><br>
+      <!-- Close button -->
+      <button id="closeSettings">Close</button>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+  <script>
+let lyrics = [];
+  let currentTimeIndex = 0;
+
+  document.getElementById('fileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      processMP3(file);
+    }
+  });
+
+  function processMP3(file) {
+    jsmediatags.read(file, {
+      onSuccess: function(tag) {
+        const { title, artist, picture, lyrics: embeddedLyrics } = tag.tags;
+        document.getElementById('title').textContent = title || 'Unknown Title';
+        document.getElementById('artist').textContent = artist || 'Unknown Artist';
+
+        if (picture) {
+          let base64String = "";
+          for (let i = 0; i < picture.data.length; i++) {
+            base64String += String.fromCharCode(picture.data[i]);
+          }
+          const imageUrl = "data:" + picture.format + ";base64," + window.btoa(base64String);
+          document.getElementById('cover').style.backgroundImage = `url(${imageUrl})`;
+        }
+
+        if (embeddedLyrics && embeddedLyrics.lyrics) {
+          parseLyrics(embeddedLyrics.lyrics);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        document.getElementById('audio').src = objectUrl;
+        document.getElementById('audio').play();
+      },
+      onError: function(error) {
+        console.log(error);
+      }
+    });
+  }
+
+  function parseLyrics(lyricsString) {
+    const lines = lyricsString.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const timeMatch = lines[i].match(/\[(\d{2}):(\d{2})\.(\d{2})\]/);
+      const text = lines[i].replace(/\[\d{2}:\d{2}\.\d{2}\]/g, '');
+      if (timeMatch) {
+        const seconds = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]) + parseInt(timeMatch[3]) / 100;
+        lyrics.push({ time: seconds, text: text });
+      }
+    }
+    displayLyrics();
+  }
+
+  function displayLyrics() {
+    const lyricsContainer = document.getElementById('lyrics');
+    lyricsContainer.innerHTML = '';
+    lyrics.forEach((line, index) => {
+      const p = document.createElement('p');
+      p.classList.add('line');
+      p.textContent = line.text;
+      p.dataset.time = line.time;
+      lyricsContainer.appendChild(p);
+    });
+  }
+
+  document.getElementById('audio').addEventListener('timeupdate', function() {
+    const currentTime = this.currentTime;
+    const lines = document.querySelectorAll('.line');
+    if (currentTimeIndex < lyrics.length && currentTime >= lyrics[currentTimeIndex].time) {
+      if (currentTimeIndex > 0) {
+        lines[currentTimeIndex - 1].classList.remove('active');
+      }
+      lines[currentTimeIndex].classList.add('active');
+      currentTimeIndex++;
+    }
+  });
+
+    // Additional code for 3D audio simulation
+    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let listener = audioContext.listener;
+
+    // Set up the listener to be at the center of the screen
+    listener.setPosition(0, 0, 0);
+
+    // Create a panner node for 3D spatial audio
+    let panner = audioContext.createPanner();
+    panner.panningModel = 'HRTF';
+    panner.distanceModel = 'inverse';
+    panner.refDistance = 1;
+    panner.maxDistance = 10000;
+    panner.rolloffFactor = 1;
+    panner.coneInnerAngle = 360;
+    panner.coneOuterAngle = 0;
+    panner.coneOuterGain = 0;
+
+    // Connect the audio element to the panner and the panner to the destination
+    let source = audioContext.createMediaElementSource(document.getElementById('audio'));
+    source.connect(panner);
+    panner.connect(audioContext.destination);
+
+    // Function to update the panner position based on user interaction
+    function updatePannerPosition(x, y) {
+      // Convert screen coordinates to Web Audio API coordinates
+      let xPos = (x / window.innerWidth) * 2 - 1;
+      let yPos = (y / window.innerHeight) * -2 + 1; // Invert Y-axis
+      panner.setPosition(xPos, yPos, -0.5);
+    }
+
+    // Update the panner position on user interaction
+    document.addEventListener('mousemove', function(event) {
+      updatePannerPosition(event.clientX, event.clientY);
+    });
+
+    // Additional code to simulate movement in the Z-axis
+    document.addEventListener('scroll', function() {
+      let zPos = window.scrollY / window.innerHeight;
+      panner.setPosition(panner.positionX.value, panner.positionY.value, -zPos);
+    });
+    window.addEventListener('beforeunload', function (event) {
+    // Prevent the default action to allow the animation to play
+    event.preventDefault();
+    // Start the warp animation
+    document.body.classList.add('warp-out');
+    // Set a delay for the actual page unload to allow the animation to finish
+    setTimeout(function() {
+      // This will close the current tab/window
+      window.close();
+    }, 1000); // Adjust the timeout to match the duration of your animation
+    // Chrome requires returnValue to be set
+    event.returnValue = '';
+  });
+    function playJackInTheBox() {
+      var player = document.getElementById('player');
+      player.classList.add('animate__animated', 'animate__jackInTheBox');
+      
+      // Remove the animation class after it's done to allow it to be re-added later
+      player.addEventListener('animationend', function() {
+        player.classList.remove('animate__animated', 'animate__jackInTheBox');
+      });
+    }
+
+    // Set up an interval to check for user inactivity
+    var inactivityTime = function () {
+      var time;
+      window.onload = resetTimer;
+      // DOM Events
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+
+      function logout() {
+        playJackInTheBox(); // Play the animation when the user is idle
+      }
+
+      function resetTimer() {
+        clearTimeout(time);
+        time = setTimeout(logout, 120000);  // 120000 milliseconds = 120 seconds
+      }
+    };
+
+    inactivityTime(); // Initialize the inactivity check
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+    let konamiIndex = 0;
+
+    // Listen for keydown events
+    document.addEventListener('keydown', (e) => {
+      // Check if the current key is part of the Konami code sequence
+      if (e.code === konamiCode[konamiIndex]) {
+        // Move to the next key in the sequence
+        konamiIndex++;
+        // If the entire sequence is entered
+        if (konamiIndex === konamiCode.length) {
+          // Reset the index for future attempts
+          konamiIndex = 0;
+          // Show the game overlay
+          document.getElementById('gameOverlay').style.display = 'block';
+        }
+      } else {
+        // Reset the index if the sequence is broken
+        konamiIndex = 0;
+      }
+    });
+
+    // Function to hide the game overlay
+    function hideGameOverlay() {
+      document.getElementById('gameOverlay').style.display = 'none';
+    }
+
+    // Close the game when the user clicks outside the iframe (optional)
+    document.getElementById('gameOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('gameOverlay')) {
+        hideGameOverlay();
+      }
+    });
+    // Create a ScriptProcessorNode for noise cancellation
+let processor = audioContext.createScriptProcessor(1024, 1, 1);
+
+// Connect the processor to the audio context
+processor.connect(audioContext.destination);
+
+// Connect the source to the processor
+source.connect(processor);
+
+// Initialize noise cancellation quality
+let noiseCancellationQuality = 'medium';
+
+// Function to handle noise cancellation
+processor.onaudioprocess = function(event) {
+  let input = event.inputBuffer.getChannelData(0);
+  let output = event.outputBuffer.getChannelData(0);
+
+  // Apply different levels of noise cancellation based on quality
+  for (let i = 0; i < input.length; i++) {
+    if (noiseCancellationQuality === 'low') {
+      output[i] = input[i] * 0.5;
+    } else if (noiseCancellationQuality === 'medium') {
+      output[i] = input[i] * 0.25;
+    } else if (noiseCancellationQuality === 'high') {
+      output[i] = input[i] * 0.1;
+    }
+  }
+};
+
+// Event listeners for 's', 'm', and 'h' keys
+window.addEventListener('keydown', function(event) {
+  if (event.key === 's') {
+    noiseCancellationQuality = 'low';
+  } else if (event.key === 'm') {
+    noiseCancellationQuality = 'medium';
+  } else if (event.key === 'h') {
+    noiseCancellationQuality = 'high';
+  }
+});
+// Function to toggle cover shape and animation
+function toggleCoverShapeAndAnimation() {
+  var cover = document.getElementById('cover');
+  // Check if the cover currently has a circle shape
+  if (cover.style.borderRadius === '50%') {
+    // Change to square with rounded edges
+    cover.style.borderRadius = '20px'; // Adjust as needed for desired roundness
+    // Stop the spinning animation
+    cover.style.animation = 'none';
+  } else {
+    // Change back to circle
+    cover.style.borderRadius = '50%';
+    // Restart the spinning animation
+    cover.style.animation = 'spin 3s linear infinite';
+  }
+}
+
+// Add click event listener to the cover
+document.getElementById('cover').addEventListener('click', toggleCoverShapeAndAnimation);
+    function addHingeEffect() {
+      document.body.classList.add('hinge');
+    }
+
+    // Trigger the hinge animation before the page unloads
+    window.onbeforeunload = function() {
+      addHingeEffect();
+      // Delay the reload to allow the animation to play
+      setTimeout(function() {
+        window.location.reload();
+      }, 2000); // Adjust the timeout to match the duration of your animation
+      return null; // This is needed to prevent a confirmation dialog
+    };
+
+// Function to show the tagging overlay
+function showTaggingOverlay() {
+  document.getElementById('taggingOverlay').style.display = 'block';
+}
+
+// Function to hide the tagging overlay
+function hideTaggingOverlay() {
+  document.getElementById('taggingOverlay').style.display = 'none';
+}
+
+// Event listener for the '5' key to show the overlay
+document.addEventListener('keydown', function(event) {
+  if (event.key === '1') {
+    showTaggingOverlay();
+  }
+});
+
+// Event listener for the 'Done' button
+document.getElementById('doneButton').addEventListener('click', function() {
+  const mp3File = document.getElementById('mp3Upload').files[0];
+  const coverFile = document.getElementById('coverUpload').files[0];
+  const title = document.getElementById('titleInput').value;
+  const artist = document.getElementById('artistInput').value;
+  const album = document.getElementById('albumInput').value;
+
+  // Read the cover image file and convert it to base64
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const coverData = event.target.result.split(',')[1]; // Remove the Data URL prefix
+
+    // Update ID3 tags using jsmediatags library
+    jsmediatags.write(mp3File, {
+      tags: {
+        title: title,
+        artist: artist,
+        album: album,
+        picture: {
+          data: coverData,
+          type: coverFile.type
+        }
+      },
+      onSuccess: function() {
+        console.log('Tags updated successfully!');
+      },
+      onError: function(error) {
+        console.error('Failed to update tags:', error);
+      }
+    });
+  };
+  reader.readAsDataURL(coverFile);
+
+  hideTaggingOverlay();
+});
+
+    function openSettings() {
+      document.getElementById('settingsOverlay').style.left = '0';
+    }
+
+    // Function to close settings menu
+    function closeSettings() {
+      document.getElementById('settingsOverlay').style.left = '-100%';
+    }
+
+    // Event listener for settings button
+    document.getElementById('settingsButton').addEventListener('click', openSettings);
+
+    // Event listener for close button
+    document.getElementById('closeSettings').addEventListener('click', closeSettings);
+
+    // Event listener for background color change
+    document.getElementById('bgColorInput').addEventListener('input', function(event) {
+      document.body.style.backgroundColor = event.target.value;
+    });
+
+    // Event listener for lighting change
+    document.getElementById('lightingInput').addEventListener('input', function(event) {
+      document.getElementById('player').style.boxShadow = '0 0 30px rgba(255, 255, 255, ' + event.target.value + ')';
+    });
+
+    // Event listener for background image upload
+    document.getElementById('bgImageInput').addEventListener('change', function(event) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('player').style.backgroundImage = 'url(' + e.target.result + ')';
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    });
+
+    // Function to open settings menu with slide-in animation
+function openSettings() {
+  var settingsOverlay = document.getElementById('settingsOverlay');
+  settingsOverlay.classList.add('animate__animated', 'animate__slideInLeft');
+  settingsOverlay.style.display = 'block';
+  settingsOverlay.style.left = '0';
+}
+
+// Function to close settings menu
+function closeSettings() {
+  var settingsOverlay = document.getElementById('settingsOverlay');
+  settingsOverlay.classList.remove('animate__slideInLeft');
+  settingsOverlay.style.left = '-100%';
+  setTimeout(function() {
+    settingsOverlay.style.display = 'none';
+  }, 500); // Assuming the slide out animation takes 500ms
+}
+// Function to update the media session metadata
+function updateMediaSession(title, artist, album, artworkUrl) {
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title,
+      artist: artist,
+      album: album,
+      artwork: [
+        { src: artworkUrl, sizes: '96x96', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '128x128', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '192x192', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '256x256', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '384x384', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '512x512', type: 'image/jpeg' },
+      ]
+    });
+    console.log('Media Session updated successfully.');
+  } else {
+    console.error('Media Session API is not supported in this browser.');
+  }
+}
+
+// Assuming 'jsmediatags' is included and 'file' is a valid file object
+jsmediatags.read(file, {
+  onSuccess: function(tag) {
+    const { title, artist, album, picture } = tag.tags;
+    let artworkUrl = 'default_cover.jpg'; // Default cover image
+    if (picture) {
+      let base64String = "";
+      for (let i = 0; i < picture.data.length; i++) {
+        base64String += String.fromCharCode(picture.data[i]);
+      }
+      artworkUrl = "data:" + picture.format + ";base64," + window.btoa(base64String);
+    }
+    updateMediaSession(title || 'Unknown Title', artist || 'Unknown Artist', album || 'Unknown Album', artworkUrl);
+  },
+  onError: function(error) {
+    console.error('Error reading media tags:', error);
+  }
+});
+</script>
 </body>
 </html>
